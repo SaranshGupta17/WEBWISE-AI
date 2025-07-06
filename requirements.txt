@@ -6,3 +6,4 @@ faiss-cpu
 python-dotenv
 streamlit
 tiktoken
+beautifulsoup4
