@@ -43,7 +43,7 @@ processed_url = sl.sidebar.button("Process URLs")
 # if sl.button("mic"):
 #     session.newq = mic()           
 # query = sl.text_input("Write your Question", value = session.newq)
- query = sl.text_input("Write your Query")
+query = sl.text_input("Write your Query")
 
 custom_prompt = PromptTemplate(
     input_variables=["context", "question"],
