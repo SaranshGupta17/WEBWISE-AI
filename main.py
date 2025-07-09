@@ -9,7 +9,8 @@ from dotenv import load_dotenv
 import streamlit as sl
 from urllib.parse import urlparse
 import os
-from speech_recogniser import mic
+# from speech_recogniser import mic
+
 load_dotenv()
 llm = GoogleGenerativeAI(model="gemini-2.5-flash")
 embedding = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
@@ -34,15 +35,15 @@ for i in range(6):
 
 processed_url = sl.sidebar.button("Process URLs")
 
-session = sl.session_state
+# session = sl.session_state
 
-if "newq" not in session:
-    session.newq = ""
+# if "newq" not in session:
+#     session.newq = ""
 
-if sl.button("mic"):
-    session.newq = mic()           
-query = sl.text_input("Write your Question", value = session.newq)
-
+# if sl.button("mic"):
+#     session.newq = mic()           
+# query = sl.text_input("Write your Question", value = session.newq)
+ query = sl.text_input("Write your Query")
 
 custom_prompt = PromptTemplate(
     input_variables=["context", "question"],
@@ -101,6 +102,6 @@ if query:
             for i in sources:
                 sl.write(i)
                 
-            session.newq = ""
+            # session.newq = ""
 
     
