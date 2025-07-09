@@ -8,3 +8,4 @@ streamlit
 tiktoken
 beautifulsoup4
 SpeechRecognition
+PyAudio
