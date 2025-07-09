@@ -9,13 +9,13 @@ from dotenv import load_dotenv
 import streamlit as sl
 from urllib.parse import urlparse
 import os
-
+from speech_recogniser import mic
 
 load_dotenv()
 llm = GoogleGenerativeAI(model="gemini-2.5-flash")
 embedding = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
 file_path = ""
-
+        
 def is_valid_url(url: str) -> bool:
     try:
         parsed = urlparse(url)
@@ -34,8 +34,16 @@ for i in range(6):
         url_list.append(url)
 
 processed_url = sl.sidebar.button("Process URLs")
-           
-query = sl.text_input("Write Your Query")
+
+session = sl.session_state
+
+if "newq" not in session:
+    session.newq = ""
+
+if sl.button("mic"):
+    session.newq = mic()           
+query = sl.text_input("Write your Question", value = session.newq)
+
 
 custom_prompt = PromptTemplate(
     input_variables=["context", "question"],
@@ -85,6 +93,7 @@ if query:
             qa_chain = load_qa_with_sources_chain(llm=llm, chain_type="stuff", prompt=custom_prompt,document_variable_name="context")
             chain = RetrievalQAWithSourcesChain(combine_documents_chain=qa_chain,retriever = vector.as_retriever())
             ans = chain({"question":query})
+            
             print(ans)
             sl.header("answer")
             sl.subheader(ans["answer"])       
@@ -92,4 +101,7 @@ if query:
             sources = ans["sources"].split("\n")
             for i in sources:
                 sl.write(i)
+                
+            session.newq = ""
+
     
