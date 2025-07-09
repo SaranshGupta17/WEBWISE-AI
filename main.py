@@ -11,7 +11,6 @@ from urllib.parse import urlparse
 import os
 from speech_recogniser import mic
 load_dotenv()
-os.environ["USER_AGENT"] = "WebWiseAI/1.0"
 llm = GoogleGenerativeAI(model="gemini-2.5-flash")
 embedding = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
 file_path = ""
@@ -92,7 +91,7 @@ if query:
             vector = FAISS.load_local(file_path,embedding,allow_dangerous_deserialization=True)
             qa_chain = load_qa_with_sources_chain(llm=llm, chain_type="stuff", prompt=custom_prompt,document_variable_name="context")
             chain = RetrievalQAWithSourcesChain(combine_documents_chain=qa_chain,retriever = vector.as_retriever())
-            ans = chain({"question":query})
+            ans = chain.invoke({"question":query})
             
             print(ans)
             sl.header("answer")

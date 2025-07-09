@@ -21,4 +21,4 @@ def mic():
             return query
         except:
 
-            return "sorry can not recognize you"
+            return "sorry can not recognize your voice"
