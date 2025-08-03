@@ -1,15 +1,17 @@
-from langchain_community.vectorstores import FAISS
+import os
+import streamlit as sl
+from dotenv import load_dotenv
+from urllib.parse import urlparse
+from langchain_community.document_loaders import WebBaseLoader
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_google_genai import GoogleGenerativeAIEmbeddings,GoogleGenerativeAI
+from langchain_community.vectorstores import FAISS
 from langchain.chains import RetrievalQAWithSourcesChain
 from langchain.chains.qa_with_sources import load_qa_with_sources_chain
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.document_loaders import WebBaseLoader
 from langchain.prompts import PromptTemplate
-from dotenv import load_dotenv
-import streamlit as sl
-from urllib.parse import urlparse
-import os
 from speech_recogniser import mic
+
+
 load_dotenv()
 llm = GoogleGenerativeAI(model="gemini-2.5-flash")
 embedding = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
@@ -47,21 +49,27 @@ query = sl.text_input("Write your Question", value = session.newq)
 custom_prompt = PromptTemplate(
     input_variables=["context", "question"],
     template="""
-You are an expert researcher assistant.
+You are an expert research assistant.
 
-Use the following context to answer the question as comprehensively and clearly as possible. 
-If the answer exists in multiple sources, combine them into a well-structured explanation. 
-Include citations (like [Source 1]) at the end of each fact. 
-Only answer from the context below. Do not make up anything.
+Use only the provided context to answer, but you may infer and summarize logically **if information is indirectly present**.
+If something is missing completely, say: "Not explicitly mentioned in sources."
 
+- Provide a **detailed answer** using bullet points or paragraphs.
+- Add citations urls from where the answer is given after each key fact.
+- If multiple sources give similar facts, merge them and mention all sources.
+
+Context:
 ==========
 {context}
 ==========
 
 Question: {question}
-Answer:
+
+Detailed Answer:
 """
-)         
+)
+
+
 
 main_placeholder = sl.empty()
 if(processed_url):
@@ -70,8 +78,8 @@ if(processed_url):
     chunks = loader.load()
     
     splitter = RecursiveCharacterTextSplitter(
-        chunk_size = 500,
-        chunk_overlap = 50
+        chunk_size = 1500,
+        chunk_overlap = 150
     )
     main_placeholder.text("Text Splitter Started.")
     document = splitter.split_documents(chunks)
@@ -89,17 +97,17 @@ if query:
         if os.path.exists(file_path):
             
             vector = FAISS.load_local(file_path,embedding,allow_dangerous_deserialization=True)
-            qa_chain = load_qa_with_sources_chain(llm=llm, chain_type="stuff", prompt=custom_prompt,document_variable_name="context")
-            chain = RetrievalQAWithSourcesChain(combine_documents_chain=qa_chain,retriever = vector.as_retriever())
+            qa_chain = load_qa_with_sources_chain(llm=llm, chain_type="stuff", prompt=custom_prompt, document_variable_name="context")
+            chain = RetrievalQAWithSourcesChain(combine_documents_chain=qa_chain, retriever = vector.as_retriever(search_kwargs={"k": 8}))
             ans = chain.invoke({"question":query})
             
             print(ans)
             sl.header("answer")
             sl.subheader(ans["answer"])       
-            sl.header("Sources:")
-            sources = ans["sources"].split("\n")
-            for i in sources:
-                sl.write(i)
+            # sl.header("Sources:")
+            # sources = ans["sources"].split("\n")
+            # for i in sources:
+            #     sl.write(i)
                 
             session.newq = ""
 
